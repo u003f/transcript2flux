@@ -23,13 +23,13 @@ experiment_type = 'sim_all'; % simulate all fluxes
 %experiment_type = 'sim_intra'; % simulate intracellular fluxes 
 %experiment_type = 'sim_secr'; % simulate secretion and growth rates
 
-COBRA_SOLVER = 'gurobi5';
-
 %initialize cobra
+COBRA_SOLVER = 'gurobi5';
 changeCobraSolver(COBRA_SOLVER, 'all');
 
 %initialize cmpi (requires MADE package; see README)
 cmpi.init()
+cmpi.set_solver('gurobi')
 
 %load model
 model = load_model(ORGANISM);
