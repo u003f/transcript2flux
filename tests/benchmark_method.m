@@ -11,17 +11,18 @@ function experiment = benchmark_method(method, model, dataset, options)
 %       experiment - experiment results
 %
 % Author: Daniel Machado, 2013
+% u003f 28-apr-15: added DNApoly option
 
     N = length(dataset.conditions);
-    
+
     status_all = zeros(1,N);
     error_all = zeros(1,N);
     runtime_all = zeros(1,N);
     fluxes_exp_all = cell(1,N);
     fluxes_sim_all = cell(1,N);
-    
+
     options.precomputed = [];
-    
+
     h = waitbar(0, sprintf('testing %s for %s dataset\n', method, dataset.name));
     set(findall(h,'type','text'),'Interpreter','none');
 
@@ -29,21 +30,21 @@ function experiment = benchmark_method(method, model, dataset, options)
         condition = dataset.conditions{i};
         ref_condition = dataset.conditions{1};
         result = evaluate_method(model, dataset, method, condition, ref_condition, options);
-        
+
         status_all(i) = result.status;
         if result.status
             fluxes_sim_all{i} = result.fluxes_sim;
             fluxes_exp_all{i} = result.fluxes_exp_sim;
-            error_all(i) = result.error; 
+            error_all(i) = result.error;
             runtime_all(i) = result.runtime;
         end
-        
+
         if isfield(result, 'precomputed')
             options.precomputed = result.precomputed;
         end
         waitbar(i/N);
     end
-    
+
     experiment.name = sprintf('%s_%s_%s', method, dataset.name, options.experiment_type);
     experiment.conditions = dataset.conditions;
     experiment.status_all = status_all;
@@ -52,8 +53,11 @@ function experiment = benchmark_method(method, model, dataset, options)
     experiment.sim_reactions = result.simulated;
     experiment.fluxes_exp_all = fluxes_exp_all;
     experiment.fluxes_sim_all = fluxes_sim_all;
-    
+
+    if isfield(options, 'DNApoly') && (options.DNApoly == true)
+    	experiment.name = [experiment.name, '_DNApoly'];
+    end
+
     save(['results/' experiment.name '.mat'], 'experiment');
     close(h);
 end
-

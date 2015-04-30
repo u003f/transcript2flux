@@ -19,10 +19,12 @@ switch sense
         model.modelsense = 'min';
 end
 
-params = struct;
-params.outputflag = 0; % shhhhh
+if isempty(options)
+    options = struct;
+end
+options.outputflag = 0; % shhhhh
 
-result = gurobi(model, params);
+result = gurobi(model, options);
 
 if isfield(result,'x')
 	x = result.x;
