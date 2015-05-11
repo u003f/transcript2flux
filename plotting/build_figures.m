@@ -7,6 +7,7 @@ function build_figures(options)
 if nargin < 1
     options = struct;
     options.DNApoly = false;
+    options.display_results = true;
 end
 
 DPI = '-r300';
@@ -21,7 +22,7 @@ if (options.DNApoly == false)
     datasets2 = {'ishii','ishii-protein','rintala-red','rintala-protein'};
     dataset_labels2 = {'Ishii (transcript)', 'Ishii (protein)', 'Rintala (transcript)', 'Rintala (protein)'};
     ymaxs = [4 4 4 4 4 4 4 4];
-    build_gene_vs_protein_plots(datasets2, methods(2:end), dataset_labels2, ymaxs, DPI)
+    build_gene_vs_protein_plots(datasets2, methods(2:end), dataset_labels2, ymaxs, DPI, options)
 end
 
 if (options.DNApoly == false)
@@ -55,7 +56,6 @@ k = 0;
 for i = 1:length(experiment_types)
     for j = 1:length(datasets)
         data = load_error_results(datasets{j}, experiment_types{i}, methods, options);
-        
         k = k+1; subplot(length(experiment_types),length(datasets),k);
         box_plotting(data, methods, ymaxs(k));
         ylabel('normalized error')
@@ -73,7 +73,7 @@ end
 close
 end
 
-function build_gene_vs_protein_plots(datasets, methods, dataset_labels, ymaxs, dpi)
+function build_gene_vs_protein_plots(datasets, methods, dataset_labels, ymaxs, dpi, options)
 
 experiment_types = {'sim_all', 'sim_intra' };
 sublabels = {'a)', 'b)','c)','d)','e)','f)', 'g)', 'h)'};
@@ -81,7 +81,7 @@ sublabels = {'a)', 'b)','c)','d)','e)','f)', 'g)', 'h)'};
 k = 0;
 for i = 1:length(experiment_types)
     for j = 1:length(datasets)
-        data = load_error_results(datasets{j}, experiment_types{i}, methods);
+        data = load_error_results(datasets{j}, experiment_types{i}, methods, options);
         k = k+1; subplot(length(experiment_types),length(datasets),k);
         box_plotting(data, methods, ymaxs(k));
         ylabel('normalized error')
@@ -318,6 +318,9 @@ for i = 1:length(methods)
     end
     load(filename);
     data{i} = experiment.error_all(experiment.status_all == 1);
+    if options.display_results
+        fprintf('%s\t%s\t%s:\t%g+-%g\n',methods{i},dataset, experiment_type,mean(data{i}),std(data{i}));
+    end
 end
 end
 
