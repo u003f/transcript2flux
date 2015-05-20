@@ -3,6 +3,9 @@ function box_plotting( data, labels , ymax)
 %
 % Author: Daniel Machado, 2013
 
+    % "SuperDaaaaave" is a bit long for a label
+    labels(strcmp('SuperDaaaaave',labels)) = {'SuperDa''ve'};
+
     values = [];
     groups = [];
     max_points = 0;

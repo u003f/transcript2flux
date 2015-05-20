@@ -46,6 +46,9 @@ function [fluxes, status, runtime] = call_method(method, args, clean_futile_cycl
         case 'GX-FBA'
             fluxes = call_GXFBA(args.model, args.gene_names, args.gene_exp, ...
                 args.gene_exp_ref, args.GXFBA);
+        
+        case 'SuperDaaaaave'
+        	fluxes = call_SuperDaaaaave(args.model, args.gene_names, args.gene_exp, args.gene_exp_sd);
             
         otherwise
             fluxes = [];

@@ -3,6 +3,9 @@ function barplot(values, reference, plot_title, labels)
 %
 % Author: Daniel Machado, 2013
 
+    % "SuperDaaaaave" is a bit long for a label
+    labels(strcmp('SuperDaaaaave',labels)) = {'SuperDa''ve'};
+
     n = length(values);
     hold on
     box on

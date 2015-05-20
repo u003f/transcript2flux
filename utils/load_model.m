@@ -34,7 +34,7 @@ function model = load_model(organism)
             model.subtrate_transport_rxn = 'GLCptspp';
             model.subtrate_uptake_rxn = 'EX_glc(e)';
 
-        case {'ecyeastoli', 'yeast_DNApoly'}
+        case {'yeast', 'yeast_DNApoly'}
             model.c = strcmp('CBIOMASS', model.rxns);
             model.ub(model.ub > 1) = 1000;
             [model.uptk_rxns, model.secr_rxns] = get_exchange_rxns_yeast(model);

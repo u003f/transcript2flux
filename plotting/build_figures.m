@@ -3,47 +3,45 @@ function build_figures(options)
 %
 % Author: Daniel Machado, 2013
 % u003f 28-apr-15: added DNApoly option
+% u003f 19-may-15: added SuperDaaaaave option
 
 if nargin < 1
     options = struct;
     options.DNApoly = false;
-    options.display_results = true;
+    options.SuperDaaaaave = false;
+    options.display_results = false;
 end
 
 DPI = '-r300';
 methods = {'pFBA', 'GIMME', 'iMAT', 'MADE', 'E-Flux', 'Lee-12', 'RELATCH', 'GX-FBA'};
+if (options.SuperDaaaaave == true)
+    methods{end+1} = 'SuperDaaaaave';
+end
+methods2 = methods(2:end);
 datasets = {'ishii', 'holm', 'rintala'};
 
 dataset_labels = {'{\it E. coli} (Ishii 2007)', '{\it E. coli} (Holm 2010)', 'Yeast (Rintala 2009)'};
 ymaxs = [3 3 3 3 3 3];
 build_error_boxplots_together(datasets, methods, dataset_labels, ymaxs, DPI, options)
 
-if (options.DNApoly == false)
-    datasets2 = {'ishii','ishii-protein','rintala-red','rintala-protein'};
-    dataset_labels2 = {'Ishii (transcript)', 'Ishii (protein)', 'Rintala (transcript)', 'Rintala (protein)'};
-    ymaxs = [4 4 4 4 4 4 4 4];
-    build_gene_vs_protein_plots(datasets2, methods(2:end), dataset_labels2, ymaxs, DPI, options)
-end
+datasets2 = {'ishii','ishii-protein','rintala-red','rintala-protein'};
+dataset_labels2 = {'Ishii (transcript)', 'Ishii (protein)', 'Rintala (transcript)', 'Rintala (protein)'};
+ymaxs = [4 4 4 4 4 4 4 4];
+build_gene_vs_protein_plots(datasets2, methods2, dataset_labels2, ymaxs, DPI, options)
 
-if (options.DNApoly == false)
-    build_heatmaps('ishii', methods, 'sim_intra', [-5 5], DPI);
-    build_heatmaps('holm', methods, 'sim_intra', [-10 10], DPI);
-    build_heatmaps('rintala', methods, 'sim_intra', [-1 1], DPI);
-end
+build_heatmaps('ishii', methods, 'sim_intra', [-5 5], DPI);
+build_heatmaps('holm', methods, 'sim_intra', [-10 10], DPI);
+build_heatmaps('rintala', methods, 'sim_intra', [-1 1], DPI);
 
 build_secretion_plots_ishii('WT_0.7h-1', methods, DPI, options);
 build_secretion_plots_holm(methods, DPI, options);
 build_secretion_plots_rintala(methods, DPI, options);
 
-if (options.DNApoly == false)
-    plot_sensitivity_analysis('holm', [3 3 3 3 3 5], DPI)
-    plot_sensitivity_analysis('rintala', [3 3 3 3 3 5], DPI)
-end
+plot_sensitivity_analysis('holm', [3 3 3 3 3 5], DPI)
+plot_sensitivity_analysis('rintala', [3 3 3 3 3 5], DPI)
 
-if (options.DNApoly == false)
-    methods = { 'GIMME', 'iMAT', 'MADE', 'E-Flux', 'Lee-12',  'GX-FBA', 'RELATCH', 'RELATCH'};
-    plot_robustness_analysis(methods, 'rintala', 'O2_0.0', [0.4 0.4 0.4 1 0.4 0.4 0.4 0], DPI)
-end
+methods = { 'GIMME', 'iMAT', 'MADE', 'E-Flux', 'Lee-12',  'GX-FBA', 'RELATCH', 'RELATCH'};
+plot_robustness_analysis(methods, 'rintala', 'O2_0.0', [0.4 0.4 0.4 1 0.4 0.4 0.4 0], DPI)
 end
 
 
@@ -123,7 +121,6 @@ print('-dtiff', dpi, filename);
 close
 end
 
-
 function build_secretion_plots_ishii(condition, methods, dpi, options)
 
 reaction_labels = {'Acetate', 'CO_2', 'Ethanol', 'Formate', ...
@@ -163,7 +160,6 @@ print('-dtiff', dpi, filename);
 close
 
 end
-
 
 function build_secretion_plots_holm(methods, dpi, options)
 
@@ -214,7 +210,6 @@ print('-dtiff', dpi, filename);
 close
 
 end
-
 
 function build_secretion_plots_rintala(methods, dpi, options)
 
@@ -268,7 +263,6 @@ close
 
 end
 
-
 function plot_sensitivity_analysis(dataset, ymaxs, dpi)
 methods = {'GIMME', 'GIMME', 'MADE', 'iMAT', 'iMAT', 'iMAT'};
 parameters = {'GIMME_LOWER_QUANTILE', 'OBJ_FRAC', 'OBJ_FRAC', 'IMAT_LOWER_QUANTILE', 'IMAT_UPPER_QUANTILE', 'IMAT_EPS'};
@@ -287,7 +281,6 @@ print('-dtiff', dpi, filename);
 close
 end
 
-
 function plot_robustness_analysis(methods, dataset, condition, ymaxs, dpi)
 
 for i = 1:length(methods)
@@ -302,7 +295,6 @@ filename = sprintf('images/robustness_%s.tiff', dataset);
 print('-dtiff', dpi, filename);
 close
 end
-
 
 function data = load_error_results(dataset, experiment_type, methods, options)
 data = cell(1, length(methods));
@@ -324,12 +316,10 @@ for i = 1:length(methods)
 end
 end
 
-
-function experiment = load_experiment(dataset, experiment_type, method)
+function experiment = load_experiment(dataset, experiment_type, method) %#ok<STOUT>
 filename = sprintf('results/%s_%s_%s.mat', method, dataset, experiment_type);
 load(filename);
 end
-
 
 function [values, data, scale] = load_sensitivity_analysis(dataset, method, parameter)
 filename = sprintf('results/sensitivity_%s_%s_%s.mat', method, parameter, dataset);
@@ -339,14 +329,12 @@ data = analysis.error_data;
 scale = analysis.scale;
 end
 
-
 function [alpha, data] = load_robustness_analysis(method, dataset, condition)
 filename = sprintf('results/robustness_%s_%s_%s.mat', method, dataset, condition);
 load(filename);
 alpha = analysis.alpha;
 data = analysis.error_data;
 end
-
 
 function data = load_results_for_condition(dataset, experiment_type, condition, methods, options)
 data = [];
@@ -362,10 +350,9 @@ for i = 1:length(methods)
     end
     load(filename);
     cond_idx = strcmp(condition, experiment.conditions);
-    data = [data experiment.fluxes_sim_all{cond_idx}];
+    data = [data experiment.fluxes_sim_all{cond_idx}]; %#ok<AGROW>
 end
 end
-
 
 function [experiment, order] = re_sort(experiment, order)
 
