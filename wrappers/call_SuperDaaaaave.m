@@ -1,4 +1,4 @@
-function fluxes = call_SuperDaaaaave(model, gene_names, gene_exp, gene_exp_sd)
+function fluxes = call_SuperDaaaaave(model, gene_names, gene_exp, gene_exp_sd, MaxGrowth)
 
 % Improved version of the Daaaaave (or "Lee et al, 2012")
 %
@@ -12,6 +12,10 @@ function fluxes = call_SuperDaaaaave(model, gene_names, gene_exp, gene_exp_sd)
 % fluxes - flux distribution
 %
 % u003f, 2015
+
+if nargin < 5
+    MaxGrowth = false;
+end
 
 % fill in zero entries
 unmeasured = setdiff(model.genes, gene_names);
@@ -37,7 +41,8 @@ S = model.S;
 [nS, nR] = size(S);
 L = model.lb;
 U = model.ub;
-f = zeros(size(model.c));
+fMaxGrowth = model.c;
+f = zeros(size(fMaxGrowth));
 b = model.b;
 csense = repmat('E', 1, nS);
 vartype = repmat('C', 1, nR);
@@ -45,6 +50,24 @@ vartype = repmat('C', 1, nR);
 % remove any pseudo-infinites
 L(L<-500) = -inf;
 U(U>500) = inf;
+
+LPproblem = {};
+LPproblem.('A') = S;
+LPproblem.('b') = b;
+LPproblem.('lb') = L;
+LPproblem.('ub') = U;
+LPproblem.('osense') = -1;
+LPproblem.('csense') = csense;
+LPproblem.('c') = fMaxGrowth;
+solution = solveCobraLP(LPproblem);
+statMaxGrowth = solution.stat;
+solnMaxGrowth = zeros(nR,1);
+objMaxGrowth = 0;
+if statMaxGrowth == 1
+    % use max growth if SuperDaaaaave does not converge
+    solnMaxGrowth = solution.full;
+    objMaxGrowth = floor(solution.obj/eps)*eps; % round down a touch
+end
 
 MILPproblem = {};
 MILPproblem.('osense') = -1;
@@ -150,14 +173,14 @@ rxn_std = containers.Map();
 
 for ind_rxn = 1:length(model.rxns)
     association = model.grRules{ind_rxn};
-
+    
     if association
-
+        
         rxn_id = model.rxns{ind_rxn};
         [nS_all, nR_all] = size(S);
         rxn_row = nS_all + 1;
         rxn_col = nR_all + 1;
-
+        
         % add reaction
         S(rxn_row, rxn_col) = -1; %#ok<SPRIX>
         L = [L; -inf]; %#ok<AGROW>
@@ -166,16 +189,16 @@ for ind_rxn = 1:length(model.rxns)
         vartype = [vartype, 'C']; %#ok<AGROW>
         b = [b; 0]; %#ok<AGROW>
         csense = [csense, 'E']; %#ok<AGROW>
-
+        
         rxn_index(rxn_id) = rxn_col;
-
+        
         association = char(expand(sym(association))); % to DNF form
         list_of_ors = regexp(association, ' or ', 'split');
-
+        
         std_out = 0;
-
+        
         for ind_or = 1:length(list_of_ors)
-
+            
             % add complex
             [~, nR_all] = size(S);
             complex_col = nR_all + 1;
@@ -184,14 +207,14 @@ for ind_rxn = 1:length(model.rxns)
             U = [U; inf]; %#ok<AGROW>
             f = [f; 0]; %#ok<AGROW>
             vartype = [vartype, 'C']; %#ok<AGROW>
-
+            
             association_or = list_of_ors{ind_or};
             list_of_ands = regexp(association_or, ' and ', 'split');
-
+            
             std_in = inf;
-
+            
             for ind_and = 1:length(list_of_ands)
-
+                
                 [nS_all, nR_all] = size(S);
                 gene_col = nR_all + 1;
                 ineq_row = nS_all + 1;
@@ -204,20 +227,30 @@ for ind_rxn = 1:length(model.rxns)
                 vartype = [vartype, 'C']; %#ok<AGROW>
                 b = [b; 0]; %#ok<AGROW>
                 csense = [csense, 'G']; %#ok<AGROW>
-
+                
                 gene = list_of_ands{ind_and};
                 index = gene_index(gene);
                 S(index, gene_col) = 1; %#ok<SPRIX>
-
+                
                 std = gene_exp_sd(gene);
                 std_in = min([std_in, std]);
             end
-
+            
             std_out = sqrt(std_out^2 + std_in^2);
         end
-
+        
         rxn_std(rxn_id) = std_out;
     end
+end
+
+if (statMaxGrowth == 1) && (MaxGrowth)
+    % set max growth as constraint
+    fMaxGrowthBig = zeros(size(f));
+    fMaxGrowthBig(1:length(fMaxGrowth)) = fMaxGrowth;
+    fMaxGrowthBig(scale_index) = -objMaxGrowth;
+    S = [S; sparse(fMaxGrowthBig')];
+    b = [b; 0];
+    csense = [csense, 'E'];
 end
 
 MILPproblem.('A') = S;
@@ -226,12 +259,12 @@ MILPproblem.('lb') = L;
 MILPproblem.('ub') = U;
 MILPproblem.('csense') = csense;
 MILPproblem.('vartype') = vartype;
-
 MILPproblem.('c') = f;
 solution = solveCobraMILP(MILPproblem, params);
 
 % set objective as constraint
 obj = solution.obj;
+obj = floor(obj/eps)*eps; % round down a touch
 S = [S; sparse(f')];
 b = [b; obj];
 csense = [csense, 'E'];
@@ -250,7 +283,7 @@ for ind = 1:nR
         S(rxn_ind, nR_all+2) = 1; %#ok<SPRIX>
         L = [L; 0; 0]; %#ok<AGROW>
         U = [U; inf; inf]; %#ok<AGROW>
-%         std = rxn_std(rxn_id); f = [f; -1/std; -1/std];
+%         std = rxn_std(rxn_id); f = [f; -1/std; -1/std]; %#ok<AGROW>
         f = [f; -1; -1]; %#ok<AGROW>
         vartype = [vartype, 'C', 'C']; %#ok<AGROW>
         b = [b; 0]; %#ok<AGROW>
@@ -270,4 +303,8 @@ solution = solveCobraMILP(MILPproblem, params);
 soln = solution.full;
 
 % rescale
-fluxes = soln(1:nR)/soln(scale_index);
+if not(isempty(soln))
+    fluxes = soln(1:nR)/soln(scale_index);
+else
+    fluxes = solnMaxGrowth;
+end

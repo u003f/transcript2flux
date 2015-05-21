@@ -48,7 +48,12 @@ function [fluxes, status, runtime] = call_method(method, args, clean_futile_cycl
                 args.gene_exp_ref, args.GXFBA);
         
         case 'SuperDaaaaave'
-        	fluxes = call_SuperDaaaaave(args.model, args.gene_names, args.gene_exp, args.gene_exp_sd);
+            MaxGrowth = false;
+        	fluxes = call_SuperDaaaaave(args.model, args.gene_names, args.gene_exp, args.gene_exp_sd, MaxGrowth);
+        
+        case 'SuperDaaaaaveMax'
+            MaxGrowth = true;
+        	fluxes = call_SuperDaaaaave(args.model, args.gene_names, args.gene_exp, args.gene_exp_sd, MaxGrowth);
             
         otherwise
             fluxes = [];

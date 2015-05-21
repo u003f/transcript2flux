@@ -398,7 +398,13 @@ switch solver
         else
            solStat = -1; % Solution not optimal or solver problem
         end
-        [x,f] = deal(resultgurobi.x,resultgurobi.objval);
+        
+        if isfield(resultgurobi,'x') && isfield(resultgurobi,'objval')
+            [x,f] = deal(resultgurobi.x,resultgurobi.objval);
+        else
+            [x,f] = deal([],[]);
+        end
+            
         
     case 'tomlab_cplex'
 %% CPLEX through tomlab

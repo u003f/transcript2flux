@@ -9,6 +9,7 @@ if nargin < 1
     options = struct;
     options.DNApoly = false;
     options.SuperDaaaaave = false;
+    options.SuperDaaaaaveMax = false;
     options.display_results = false;
 end
 
@@ -16,6 +17,9 @@ DPI = '-r300';
 methods = {'pFBA', 'GIMME', 'iMAT', 'MADE', 'E-Flux', 'Lee-12', 'RELATCH', 'GX-FBA'};
 if (options.SuperDaaaaave == true)
     methods{end+1} = 'SuperDaaaaave';
+end
+if (options.SuperDaaaaaveMax == true)
+    methods{end+1} = 'SuperDaaaaaveMax';
 end
 methods2 = methods(2:end);
 datasets = {'ishii', 'holm', 'rintala'};
@@ -99,7 +103,7 @@ n = length(methods);
 order = [];
 for i = 1:n
     experiment = load_experiment(dataset, experiment_type, methods{i});
-    
+
     if i == 1
         [experiment, order] = re_sort(experiment, []);
     else
@@ -108,7 +112,7 @@ for i = 1:n
     subplot(5, n, i);
     plot_error(experiment.error_all);
     title(methods{i}, 'FontWeight', 'bold')
-    
+
     subplot(5, n, n*(1:4)+i);
     show_labels = i == 1;
     heatmap(experiment, show_labels, clim);
@@ -311,7 +315,7 @@ for i = 1:length(methods)
     load(filename);
     data{i} = experiment.error_all(experiment.status_all == 1);
     if options.display_results
-        fprintf('%s\t%s\t%s:\t%g+-%g\n',methods{i},dataset, experiment_type,mean(data{i}),std(data{i}));
+        fprintf('%s\t%s\t%s:\t%g+-%g%%\n',methods{i},dataset, experiment_type,median(data{i}),100*std(data{i})/mean(data{i}));
     end
 end
 end

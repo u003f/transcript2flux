@@ -7,9 +7,11 @@
 % Author: Daniel Machado, 2013
 % u003f 28-apr-15: added DNApoly option
 % u003f 19-may-15: added SuperDaaaaave option
+% u003f 20-may-15: added SuperDaaaaaveMax option
 
 options.DNApoly = false;
 options.SuperDaaaaave = true;
+options.SuperDaaaaaveMax = true;
 options.display_results = true;
 
 addpath('tests')
@@ -41,6 +43,9 @@ experiment_type_list = {'sim_all', 'sim_intra', 'sim_secr'};
 method_list = {'pFBA', 'GIMME', 'iMAT', 'MADE', 'E-Flux', 'Lee-12', 'RELATCH', 'GX-FBA'};
 if (options.SuperDaaaaave == true)
     method_list{end+1} = 'SuperDaaaaave';
+end
+if (options.SuperDaaaaaveMax == true)
+    method_list{end+1} = 'SuperDaaaaaveMax';
 end
 
 for method_iter = method_list
